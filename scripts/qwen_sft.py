@@ -2,13 +2,22 @@ from datasets import load_dataset
 from transformers import AutoTokenizer, AutoModelForCausalLM, TrainingArguments
 from trl import SFTTrainer
 from peft import LoraConfig, TaskType, get_peft_model
+import ast
+import torch
+from datasets import Dataset
+from trl import SFTConfig
 
-model_name = "Qwen/Qwen3-0.6B"
-dataset_path = "./data/message.txt"
+model_name = "Qwen/Qwen3-8B"
+dataset_path = "./data/message.jsonl"
 
 tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
 tokenizer.pad_token = tokenizer.eos_token  # Qwen 無 pad_token 時需設為 eos_token
-model = AutoModelForCausalLM.from_pretrained(model_name, trust_remote_code=True)
+model = AutoModelForCausalLM.from_pretrained(
+    model_name,
+    torch_dtype=torch.bfloat16,
+    device_map="auto",
+    trust_remote_code=True
+)
 
 peft_config = LoraConfig(
     task_type=TaskType.CAUSAL_LM,
@@ -29,7 +38,7 @@ peft_config = LoraConfig(
 )
 model = get_peft_model(model, peft_config)
 
-dataset = load_dataset("text", data_files=dataset_path, split="train")
+dataset = load_dataset("json", data_files=dataset_path, split="train")
 
 training_args = TrainingArguments(
     output_dir="./output/qwen3-pun-lora",
@@ -40,16 +49,17 @@ training_args = TrainingArguments(
     logging_steps=10,
     learning_rate=1e-4,
     max_grad_norm=1.0,
-    fp16=False,
+    fp16=True,
     logging_dir="./logs",
     report_to="none"
 )
 
 trainer = SFTTrainer(
     model=model,
+    tokenizer=tokenizer,
     train_dataset=dataset,
     peft_config=peft_config,
-    args=training_args
+    args=training_args,
 )
 
 trainer.train()
