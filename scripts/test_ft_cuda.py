@@ -3,10 +3,8 @@ import threading
 from transformers import AutoModelForCausalLM, AutoTokenizer, TextIteratorStreamer
 from peft import PeftModel
 
-# 选择设备
 device = "mps" if torch.backends.mps.is_available() else "cuda" if torch.cuda.is_available() else "cpu"
 
-# 1. 加载模型与 LoRA
 model_name = "Qwen/Qwen3-8B"
 tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
 tokenizer.pad_token = tokenizer.eos_token
