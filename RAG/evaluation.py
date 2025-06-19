@@ -93,7 +93,7 @@ def answer_query_base(query, ctx):
     """
     response = client.get_ollama_message(
         messages=prompt,
-        model='qwen3:4b'
+        model='o4-mini'
     )
     return response
 
@@ -108,7 +108,7 @@ def evaluate_joke(topic, ctx, generated_joke):
     
     response_text = client.get_ollama_message(
         messages=eval_prompt,
-        model='qwen3:4b'  # You can use the same or a different model for evaluation
+        model='claude-3-7-sonnet-latest'  # You can use the same or a different model for evaluation
     )
     
     try:
@@ -184,7 +184,7 @@ if __name__ == "__main__":
     output_dir = os.path.join(data_dir, 'eval')
     os.makedirs(output_dir, exist_ok=True)
     
-    output_filename = os.path.join(output_dir, 'generated_and_evaluated_jokes.json')
+    output_filename = os.path.join(output_dir, 'generated_and_evaluated_jokes_openai.json')
     with open(output_filename, 'w', encoding='utf-8') as f:
         json.dump(all_generated_jokes, f, ensure_ascii=False, indent=2)
 
