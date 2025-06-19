@@ -5,6 +5,14 @@ import time
 from faissdb import FaissVectorDB
 from request import LiteLMClient
 import re
+from transformers import AutoModelForCausalLM, AutoTokenizer
+import torch
+
+GEN_MODEL_DIR = "/root/train/qwen3-pun-merged"   
+tok  = AutoTokenizer.from_pretrained(GEN_MODEL_DIR, trust_remote_code=True)
+gen_model = AutoModelForCausalLM.from_pretrained(
+    GEN_MODEL_DIR, device_map="auto"
+).eval()
 
 client = LiteLMClient(
     api_key=os.getenv("OLLAMA_API_KEY"),
@@ -77,7 +85,7 @@ def retrieve_base(query, db):
         context += f"\n{chunk['text']}\n"
     return results, context
 
-def answer_query_base(query, ctx):
+def answer_query_base(topic, ctx):
     if not ctx:
         return "無法根據主題找到相關的笑話資料。"
         
@@ -91,11 +99,22 @@ def answer_query_base(query, ctx):
     </jokes>
     Rewrite the joke based on the provided material in a natural and entertaining way so that readers find it funny. Please remain faithful to the underlying context and only deviate from it if you are 100% certain of the answer. Answer the question immediately and avoid preamble such as ‘Here is the answer.’ The punchline may use puns, wordplay, political satire, etc., but please avoid rude or offensive remarks, and recast it in a more creative context.
     """
-    response = client.get_ollama_message(
-        messages=prompt,
-        model='qwen3:4b'
-    )
-    return response
+    inputs = tok(prompt, return_tensors="pt").to(gen_model.device)
+    with torch.no_grad():
+        outs = gen_model.generate(
+            **inputs,
+            max_new_tokens=256,
+            temperature=0.8,
+            top_p=0.9
+        )
+    prompt_len = inputs["input_ids"].size(1)
+    gen_ids = outs[0][prompt_len:]
+
+    if tok.eos_token_id is not None and tok.eos_token_id in gen_ids:
+        eos_index = (gen_ids == tok.eos_token_id).nonzero(as_tuple=True)[0][0].item()
+        gen_ids = gen_ids[:eos_index]
+
+    return tok.decode(gen_ids, skip_special_tokens=True).strip()
 
 
 def evaluate_joke(topic, ctx, generated_joke):
@@ -162,9 +181,11 @@ if __name__ == "__main__":
         print(f"  - Retrieved context for '{topic}'")
 
         # Step 2: Generate a joke based on the context        
-        generated_joke = answer_query_base(query, context)
+        generated_joke = answer_query_base(topic, context)
         # Remove any <think>...</think> sections from the generated joke
         generated_joke = re.sub(r'<think>.*?</think>', '', generated_joke, flags=re.DOTALL).strip()
+        generated_joke = re.sub(r'<query>.*?</query>', '', generated_joke, flags=re.DOTALL).strip()
+        generated_joke = re.sub(r'<jokes>.*?</jokes>', '', generated_joke, flags=re.DOTALL).strip()
         print(f"Generated Joke: {generated_joke}")
 
         # Step 3: Evaluate the generated joke
@@ -184,7 +205,7 @@ if __name__ == "__main__":
     output_dir = os.path.join(data_dir, 'eval')
     os.makedirs(output_dir, exist_ok=True)
     
-    output_filename = os.path.join(output_dir, 'generated_and_evaluated_jokes.json')
+    output_filename = os.path.join(output_dir, 'generated_and_evaluated_jokes_ft.json')
     with open(output_filename, 'w', encoding='utf-8') as f:
         json.dump(all_generated_jokes, f, ensure_ascii=False, indent=2)
 

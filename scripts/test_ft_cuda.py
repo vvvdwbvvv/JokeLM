@@ -5,7 +5,7 @@ from peft import PeftModel
 
 device = "mps" if torch.backends.mps.is_available() else "cuda" if torch.cuda.is_available() else "cpu"
 
-model_name = "Qwen/Qwen3-8B"
+model_name = "Qwen/Qwen3-4B"
 tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
 tokenizer.pad_token = tokenizer.eos_token
 
@@ -15,7 +15,7 @@ base_model = AutoModelForCausalLM.from_pretrained(
     device_map="auto",
     trust_remote_code=True
 )
-model = PeftModel.from_pretrained(base_model, "./output/qwen3-pun-lora/checkpoint-15")
+model = PeftModel.from_pretrained(base_model, "./output/qwen3-joke-rewriter-lora/checkpoint-15")
 model = model.to(device)
 model.eval()
 
@@ -67,8 +67,7 @@ def test_pun_explanation(question):
 if __name__ == "__main__":
     print("測試微調後的中文諧音梗模型")
     questions = [
-        '為什麼 "讓台灣人放棄諧音梗已經 Taiwan 且 Tainan 了" 很好笑？',
-        '為什麼 "吃我慶記啦" 很好笑？'
+        '說跟貓有關的笑話',
     ]
     for q in questions:
         test_pun_explanation(q)
