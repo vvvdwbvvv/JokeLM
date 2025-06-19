@@ -49,3 +49,22 @@ class LiteLMClient:
         resp.raise_for_status()
         data = resp.json()
         print(data)
+
+    def get_models(self) -> list:
+        url = f"{self.endpoint}/v1/models"
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json"
+        }
+        resp = requests.get(url, headers=headers)
+        resp.raise_for_status()
+        data = resp.json()
+        return data['data']
+    
+if __name__ == "__main__":
+    client = LiteLMClient(
+        api_key=OLLAMA_API_KEY,
+        endpoint=OLLAMA_ENDPOINT
+    )
+    models = client.get_models()
+    print("Available models:", models)

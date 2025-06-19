@@ -14,7 +14,7 @@ with open('data/1132NLP_final.json', 'r') as f:
     data = json.load(f)
 
 # Initialize the VectorDB
-db = FaissVectorDB("1132NLP_final",embedding_key="emb_ada")
+db = FaissVectorDB("1132NLP_final",embedding_key="emb_ada") #TODO: add multiple embedding keys iteration for comparing performance
 db.load_data(data)
 
 def get_embeddings_parallel(query):
@@ -58,17 +58,17 @@ def answer_query_base(query, db):
     {context}
     </jokes>
     Please remain faithful to the underlying context, and only deviate from it if you are 100% sure that you know the answer already. 
-    Answer the question now, and avoid providing preamble such as 'Here is the answer', 笑點可以是諧音、雙關、政治諷刺等，但請避免失禮或攻擊性言論。
+    Answer the question now, and avoid providing preamble such as 'Here is the answer', 笑點可以是諧音、雙關、政治諷刺等，但請避免失禮或攻擊性言論，可以改寫為更有創意的context。
     """
     response = client.get_ollama_message(
         messages=prompt,
-        model='claude-3-7-sonnet-latest'
+        model='qwen3:4b' #claude-3-7-sonnet-latest
     )
     print(response)
     return response
 
 if __name__ == "__main__":
-    query = "說跟貓有關的笑話"
+    query = "說跟綠豆有關的笑話"
     apply_query(query)
     
     # Retrieve and answer the query using the vector database
