@@ -5,6 +5,7 @@ from pathlib import Path
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 from peft import PeftModel
 
+<<<<<<< HEAD
 
 '''
 python post_train_pipeline.py \
@@ -30,6 +31,9 @@ python post_train_pipeline.py \
 '''
 
 
+=======
+# ---------- CLI 參數 ----------
+>>>>>>> origin/main
 def get_args():
     p = argparse.ArgumentParser()
     p.add_argument("--base_model", required=True,
@@ -51,10 +55,18 @@ def get_args():
     p.add_argument("--max_new_tokens", type=int, default=128)
     return p.parse_args()
 
+<<<<<<< HEAD
+=======
+# ---------- 工具函數 ----------
+>>>>>>> origin/main
 def load_prompts(file_path:str|None):
     if file_path and Path(file_path).is_file():
         return [json.loads(l)["prompt"] if l.strip().startswith("{") else l.strip()
                 for l in Path(file_path).read_text().splitlines() if l.strip()]
+<<<<<<< HEAD
+=======
+    # 預設測試集
+>>>>>>> origin/main
     return [
         "說一個跟貓有關的笑話",
         "說一個跟綠豆有關的笑話。",

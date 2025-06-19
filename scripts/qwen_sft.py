@@ -43,7 +43,8 @@ def format_dataset(example):
     user_prompt = (
         f"### Topic:\n{example['topic']}\n\n"
         f"### Context:\n{example['context']}\n\n"
-        f"### Instruction:\n{example['instruction']}"
+        f"### Instruction:\n{example['instruction']}\n\n"
+        f"### Example:\n{example['example_joke']}"
     )
 
     messages = [{"role": "user", "content": user_prompt}]
@@ -60,7 +61,7 @@ dataset = dataset.map(format_dataset, remove_columns=list(dataset.features))
 training_args = TrainingArguments(
     output_dir="./output/qwen3-joke-rewriter-lora",
     num_train_epochs=3,
-    per_device_train_batch_size=1,
+    per_device_train_batch_size=5,
     gradient_accumulation_steps=4,
     save_strategy="epoch",
     logging_steps=10,
