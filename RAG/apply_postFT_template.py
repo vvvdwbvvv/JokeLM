@@ -2,6 +2,7 @@ import json
 import os
 import concurrent.futures
 import time
+import re
 from faissdb import FaissVectorDB
 from request import LiteLMClient
 
@@ -68,7 +69,7 @@ def answer_query_base(query, db):
     """
     response = client.get_ollama_message(
         messages=prompt,
-        model='qwen3:4b'
+        model='o4-mini'
     )
     return response
 
@@ -101,14 +102,18 @@ if __name__ == "__main__":
         retrieved_docs, context = retrieve_base(query, db)
         print(f"  - Retrieved context for '{topic}'")
 
+        example_joke = answer_query_base(query, db)
         instructions.append({
             "topic": topic,
             "query": query,
             "context": context,
             "instruction": "Rewrite the joke based on the provided material in a natural and entertaining way so that readers find it funny. Please remain faithful to the underlying context and only deviate from it if you are 100% certain of the answer. Answer the question immediately and avoid preamble such as ‘Here is the answer.’ The punchline may use puns, wordplay, political satire, etc., but please avoid rude or offensive remarks, and recast it in a more creative context.",
+            "example_joke": example_joke,
         })
         
         time.sleep(1)
+    
+
 
     output_filename = 'generated_post_finetune_jokes.json'
     with open(output_filename, 'w', encoding='utf-8') as f:
